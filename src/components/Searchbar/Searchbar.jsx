@@ -1,15 +1,21 @@
 import PropTypes from 'prop-types';
 
+import toast, { Toaster } from 'react-hot-toast';
+
 import s from '../Searchbar/Searchbar.module.css';
 
-const Searchbar = ({ onSubmit }) => (
+const Searchbar = ({ handleFormSubmit, imgValue }) => (
   <header className={s.searchbar}>
     <form
       onSubmit={e => {
         e.preventDefault();
         const value = e.target.elements.imgValue.value;
-        onSubmit(value);
 
+        if ((value.trim() !== '') & (imgValue !== value)) {
+          handleFormSubmit(value);
+        } else {
+          toast.error('Pleas write something');
+        }
         e.target.elements.imgValue.value = '';
       }}
       className={s.searchForm}
@@ -27,11 +33,12 @@ const Searchbar = ({ onSubmit }) => (
         placeholder="Search images and photos"
       />
     </form>
+    <Toaster position="top-right" reverseOrder={false} />
   </header>
 );
 
 export default Searchbar;
 
 Searchbar.propTypes = {
-  onSubmit: PropTypes.func.isRequired,
+  handleFormSubmit: PropTypes.func.isRequired,
 };

@@ -1,4 +1,5 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
+// import {Component} from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import Loader from 'react-loader-spinner';
 import { LoaderContainer } from '../Loader/LoaderContainer.styled.jsx';
@@ -11,139 +12,95 @@ import ImageGallery from '../ImageGallery/ImageGallery';
 import Button from '../Button/Button';
 import Modal from '../Modal/Modal';
 
-class App extends Component {
-  state = {
-    imgValue: null,
-    images: [],
-    reqStatus: 'idle',
-    // idle, pending, resolved, rejected
-    page: 1,
-    loader: false,
-    selectImage: null,
-  };
+const App = () => {
+  const [imgValue, setImgValue] = useState('');
+  const [images, setImages] = useState([]);
+  const [reqStatus, setrReqStatus] = useState('idle');
+  const [page, setPage] = useState(1);
+  const [loader, setLoader] = useState(false);
+  const [selectImage, setSelectImage] = useState(null);
 
-  async componentDidUpdate(_, prevState) {
-    const { imgValue, page } = this.state;
-
-    if (prevState.imgValue !== imgValue || prevState.page !== page) {
-      this.setState({ loader: true });
-
-      if (imgValue.trim() === '') {
-        this.setState({
-          reqStatus: 'pending',
-        });
-        toast.error('Pleas write something');
-        return;
-      }
-
+  useEffect(() => {
+    if (imgValue.trim() !== '') {
       try {
-        const images = await fetchImages(imgValue, page);
-        this.setState({
-          reqStatus: 'idle',
-        });
+        setrReqStatus('idle');
 
-        if (!images.length) {
-          this.setState({
-            reqStatus: 'rejected',
-            images: [],
-            page: 1,
-          });
-          toast.error('your images not find.');
-          return;
-        }
+        fetchImages(imgValue, page).then(responseImages => {
+          setLoader(true);
 
-        if (prevState.imgValue !== imgValue) {
-          this.setState({
-            images: [],
-            page: 1,
-          });
-        }
+          if (!responseImages.length) {
+            setLoader(false);
+            setImages([]);
+            setrReqStatus('rejected');
+            setPage(1);
+            toast.error('your images not find.');
+            return;
+          }
 
-        this.setState(prevState => {
-          return {
-            images: [...prevState.images, ...images],
-            reqStatus: 'resolved',
-            // loader: false,
-          };
-        });
-
-        this.scrollTo();
-
-        toast(`its your, ${imgValue}s!`, {
-          icon: '👏',
+          setImages(prevImages => [...prevImages, ...responseImages]);
+          setLoader(false);
+          scrollTo();
+          setrReqStatus('resolved');
+          toast(`its your, ${imgValue}s!`, { icon: '👏' });
         });
       } catch (error) {
-        this.setState({ reqStatus: 'rejected' });
+        setrReqStatus('rejected');
         toast.error("This didn't work.");
       } finally {
-        this.setState({ loader: false });
+        setLoader(false);
       }
     }
-  }
+  }, [imgValue, page]);
 
-  onCloseModal = () => {
-    this.setState({ selectImage: null });
+  const handleFormSubmit = imgValue => {
+    setImgValue(imgValue);
+    setPage(1);
+    setImages([]);
+    setLoader(true);
   };
 
-  handleSelectImage = imgUrl => {
-    this.setState({ selectImage: imgUrl });
+  const loadMoreClick = e => {
+    setPage(page + 1);
+    setLoader(true);
   };
 
-  handleFormSubmit = imgValue => {
-    this.setState({
-      imgValue,
-      page: 1,
-      loader: true,
-    });
+  const handleSelectImage = imgUrl => {
+    setSelectImage(imgUrl);
   };
 
-  loadMoreClick = e => {
-    this.setState({
-      page: this.state.page + 1,
-    });
+  const onCloseModal = () => {
+    setSelectImage(null);
   };
 
-  scrollTo = () => {
+  const scrollTo = () => {
     window.scrollTo({
       top: document.documentElement.scrollHeight,
       behavior: 'smooth',
     });
   };
 
-  render() {
-    const { images, reqStatus, loader, selectImage } = this.state;
-
-    return (
-      <div className={s.app}>
-        <Searchbar onSubmit={this.handleFormSubmit} />
-        <ImageGallery
-          images={images}
-          handleSelectImage={this.handleSelectImage}
-        />
-
-        {selectImage && (
-          <Modal image={selectImage} onCloseModal={this.onCloseModal} />
+  return (
+    <div className={s.app}>
+      <Searchbar handleFormSubmit={handleFormSubmit} imgValue={imgValue} />
+      <ImageGallery images={images} handleSelectImage={handleSelectImage} />
+      {selectImage && <Modal image={selectImage} onCloseModal={onCloseModal} />}
+      <LoaderContainer>
+        {reqStatus === 'resolved' && !loader && (
+          <Button onClickLoadMore={loadMoreClick} />
         )}
-
-        <LoaderContainer>
-          {reqStatus === 'resolved' && !loader && (
-            <Button onClickLoadMore={this.loadMoreClick} />
-          )}
-
-          {loader !== false && (
-            <Loader
-              type="Puff"
-              color="#00BFFF"
-              height={100}
-              width={100}
-              timeout={3000} //3 secs
-            />
-          )}
-        </LoaderContainer>
-        <Toaster position="top-right" reverseOrder={false} />
-      </div>
-    );
-  }
-}
+        {loader !== false && (
+          <Loader
+            type="Puff"
+            color="#00BFFF"
+            height={100}
+            width={100}
+            timeout={3000} //3 secs
+          />
+        )}
+      </LoaderContainer>
+      <Toaster position="top-right" reverseOrder={false} />
+    </div>
+  );
+};
 
 export default App;
