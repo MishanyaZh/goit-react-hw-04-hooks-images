@@ -10,11 +10,10 @@ const Searchbar = ({ handleFormSubmit, imgValue }) => (
       onSubmit={e => {
         e.preventDefault();
         const value = e.target.elements.imgValue.value;
-
-        if ((value.trim() !== '') & (imgValue !== value)) {
+        if (imgValue.trim() !== value.trim()) {
           handleFormSubmit(value);
         } else {
-          toast.error('Pleas write something');
+          toast.error(`Pleas write something`);
         }
         e.target.elements.imgValue.value = '';
       }}

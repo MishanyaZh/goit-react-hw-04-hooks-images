@@ -21,38 +21,43 @@ const App = () => {
   const [selectImage, setSelectImage] = useState(null);
 
   useEffect(() => {
-    if (imgValue.trim() !== '') {
-      try {
-        setrReqStatus('idle');
+    if (imgValue === '') {
+      toast.success('hello my friends');
+      return;
+    }
+    try {
+      setrReqStatus('idle');
+      fetchImages(imgValue, page).then(responseImages => {
+        setLoader(true);
 
-        fetchImages(imgValue, page).then(responseImages => {
-          setLoader(true);
-
-          if (!responseImages.length) {
-            setLoader(false);
-            setImages([]);
-            setrReqStatus('rejected');
-            setPage(1);
-            toast.error('your images not find.');
-            return;
-          }
-
-          setImages(prevImages => [...prevImages, ...responseImages]);
+        if (!responseImages.length) {
           setLoader(false);
-          scrollTo();
-          setrReqStatus('resolved');
-          toast(`its your, ${imgValue}s!`, { icon: '👏' });
-        });
-      } catch (error) {
-        setrReqStatus('rejected');
-        toast.error("This didn't work.");
-      } finally {
+          setImages([]);
+          setrReqStatus('rejected');
+          setPage(1);
+          toast.error('your images not find.');
+          return;
+        }
+
+        setImages(prevImages => [...prevImages, ...responseImages]);
         setLoader(false);
-      }
+        scrollTo();
+        setrReqStatus('resolved');
+        toast(`its your, ${imgValue}s!`, { icon: '👏' });
+      });
+    } catch (error) {
+      setrReqStatus('rejected');
+      toast.error("This didn't work.");
+    } finally {
+      setLoader(false);
     }
   }, [imgValue, page]);
 
   const handleFormSubmit = imgValue => {
+    if (imgValue.trim() === '') {
+      toast.error('Pleas write something');
+      return;
+    }
     setImgValue(imgValue);
     setPage(1);
     setImages([]);
