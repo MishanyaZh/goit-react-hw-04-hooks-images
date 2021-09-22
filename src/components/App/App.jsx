@@ -40,11 +40,11 @@ const App = () => {
         setImages(prevImages => [...prevImages, ...responseImages]);
         setReqStatus('resolved');
         toast(`its your, ${imgValue}s!`, { icon: '👏' });
+        scrollTo();
       } catch (error) {
         toast.error("This didn't work.");
       } finally {
         setLoader(false);
-        scrollTo();
       }
     }
     getImages();

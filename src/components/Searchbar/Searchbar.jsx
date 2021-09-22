@@ -15,7 +15,7 @@ const Searchbar = ({ handleFormSubmit, imgValue }) => (
         } else {
           toast.error(`Pleas write something`);
         }
-        e.target.elements.imgValue.value = '';
+        e.target.reset();
       }}
       className={s.searchForm}
     >
